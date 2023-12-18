@@ -39,8 +39,8 @@ class TNDP:
         with open(filename, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                i = int(row["from"])
-                j = int(row["to"])
+                i = int(row["from"]) - 1
+                j = int(row["to"]) - 1
                 self.demand_matrix[i][j] = int(row["demand"])
                 self.total_demand += self.demand_matrix[i][j]
 

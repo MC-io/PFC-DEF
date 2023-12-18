@@ -1,21 +1,12 @@
 import random
-import networkx as nx
 import numpy as np
 from population import Population
-from TNDP import TNDP, Graph, Edge
+from TNDP import TNDP
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 import copy
 
-class Route:
-    def __init__(self, route_id, stops):
-        self.route_id = route_id
-        self.stops = stops
-
 class RouteSet:
-    def __init__(self, graph, demand_matrix):
-        self.graph = graph
-        self.demand_matrix = demand_matrix
+    def __init__(self):
         self.routes = []
         self.objectives = None
         self.rank = None
@@ -38,34 +29,32 @@ class RouteSet:
             or_condition = or_condition or first < second
         return (and_condition and or_condition)
     
-    def user_cost(self):      # Reducir tiempo de viaje promedio de cada pasajero
+    def user_cost(self, graph, demand_matrix):      # Reducir tiempo de viaje promedio de cada pasajero
         total_time = 0
         for route in self.routes:
             for i in range(len(route) - 1):
                 nw_x = 0
-                for edge in self.graph.nodes[route[i]]:
+                for edge in graph.nodes[route[i]]:
                     if edge.to == route[i + 1]:
                         nw_x = edge.value
-                total_time += self.demand_matrix[route[i]][route[i + 1]] * nw_x
+                total_time += demand_matrix[route[i]][route[i + 1]] * nw_x
         return total_time
 
 
-    def find_coverage(self):    
+    def find_coverage(self, graph, demand_matrix):    
         total_demand = 0
-        for i in range(len(self.demand_matrix)):
-            for j in range(len(self.demand_matrix)):
-                total_demand += self.demand_matrix[i][j]
+        for i in range(len(demand_matrix)):
+            for j in range(len(demand_matrix)):
+                total_demand += demand_matrix[i][j]
         coverage = 0
         for route in self.routes:
             for i in range(len(route) - 1):
                 for j in range(i + 1, len(route)):
-                    coverage += self.demand_matrix[i][j]
-
+                    coverage += demand_matrix[i][j]
         return coverage / total_demand
 
-    def calculate_objectives(self):
-        self.objectives = [self.user_cost(), self.find_coverage()]
-
+    def calculate_objectives(self, graph, demand_matrix):
+        self.objectives = [self.user_cost(graph, demand_matrix), self.find_coverage(graph, demand_matrix)]
 
 class NSGAII:
     def __init__(self, generations, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob):
@@ -100,14 +89,14 @@ class NSGAII:
 
     def generate_random_route(self):
         random_start_point = random.randrange(0, self.network_size)
-        max_length = random.randrange(4, 10)
+        max_length = random.randrange(3, 5)
         visited = []
         random_route = [random_start_point]
         self.explore(visited, random_start_point, -1, random_route, max_length)
         return random_route
     
     def generate_individual(self):
-        random_routeset = RouteSet(self.graph, self.demand_matrix)
+        random_routeset = RouteSet()
         for i in range(self.num_of_routes):
             random_route = self.generate_random_route()
             random_routeset.routes.append(random_route)
@@ -117,7 +106,7 @@ class NSGAII:
         population = Population()
         for _ in range(self.num_of_individuals):
             individual = self.generate_individual()
-            individual.calculate_objectives()
+            individual.calculate_objectives(self.graph, self.demand_matrix)
             population.append(individual)
         return population
 
@@ -185,8 +174,8 @@ class NSGAII:
             child1, child2 = self.crossover(parent1, parent2)
             self.mutate(child1)
             self.mutate(child2)
-            child1.calculate_objectives()
-            child2.calculate_objectives()
+            child1.calculate_objectives(self.graph, self.demand_matrix)
+            child2.calculate_objectives(self.graph, self.demand_matrix)
             children.append(child1)
             children.append(child2)
 
@@ -194,14 +183,6 @@ class NSGAII:
 
     def tournament(self, population):
         participants = random.sample(population.population, self.num_of_tour_particips)
-        """
-        for participant in participants:
-            print("part:")
-            for route in participant.routes:
-                for a in route:
-                    print("{} - ".format(a), end="")
-                print("")
-        """
         best = None
         for participant in participants:
             if best is None or (
@@ -216,8 +197,8 @@ class NSGAII:
         
 
     def crossover(self, parent1, parent2):
-        child1 = parent1
-        child2 = parent2
+        child1 = copy.deepcopy(parent1)
+        child2 = copy.deepcopy(parent2)
 
         longest_route_ind1 = len(child1.routes[0])
         pos_longest_route_ind1 = 0
@@ -305,11 +286,11 @@ num_nodes = 15
 tndp = TNDP(num_nodes)
 
 tndp.read_network_from_file("networks\\Mandl\\mandl_links.csv")
-tndp.read_demand_matrix_from_file("networks\\Mandl\mandl_demand.csv")
+tndp.read_demand_matrix_from_file("networks\\Mandl\\mandl_demand.csv")
 
 
 
-nsga = NSGAII(num_of_individuals=100, generations=50, tndp=tndp, num_of_routes=3, num_of_tour_particips=2, tournament_prob=0.9)
+nsga = NSGAII(num_of_individuals=50, generations=5, tndp=tndp, num_of_routes=3, num_of_tour_particips=2, tournament_prob=0.9)
 """
 for i in range(len(nsga.graph.nodes)):
     for edge in nsga.graph.nodes[i]:

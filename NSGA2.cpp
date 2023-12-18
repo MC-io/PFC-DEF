@@ -1,5 +1,6 @@
 #include "NSGA2.h"
 #include <algorithm>
+#include <iostream>
 
 struct less_than_key
 {
@@ -9,42 +10,70 @@ struct less_than_key
     }
 };
 
-NSGA2::NSGA2(int generations, int num_of_individuals, TNDP tndp, int num_of_routes, int num_of_tour_particips, float tournament_prob)
+NSGA2::NSGA2(int generations, int num_of_individuals, TNDP & tndp, int num_of_routes, int num_of_tour_particips, float tournament_prob)
 {
     this->generations = generations;
     this->num_of_individuals = num_of_individuals;
-    this->network_graph = tndp.network_graph;
-    this->demand_matrix = tndp.demand_matrix;
+    this->network_graph = &tndp.network_graph;
+    this->demand_matrix = &tndp.demand_matrix;
     this->network_size = tndp.size;
     this->population = Population();
     this->num_of_routes = num_of_routes;
     this->num_of_tour_particips = num_of_tour_particips;
     this->tournament_prob = tournament_prob;
+
+    for (int i = 0; i < this->network_graph->nodes.size(); i++)
+    {
+        std::cout << "Nodo " << i << " -> ";
+        for (int j = 0; j < this->network_graph->nodes[i].size(); j++)
+        {
+            std::cout << this->network_graph->nodes[i][j].to << ' ';
+        }
+        std::cout << '\n';
+    }
+    
 }
-void NSGA2::explore(std::vector<bool> & visited, int node, int node_from, Route route, int max_length)
+void NSGA2::explore(std::vector<bool> & visited, int node, int node_from, Route & route, int max_length)
 {
     if (!visited[node])
     {
+        visited[node] = true;
+        std::cout << "EXPLORING in node " << node << "\n";
+        std::cout << "It has " << this->network_graph->nodes[node].size() << " edges\n";
         std::vector<int> cand_nodes;
-        for (const auto x : this->network_graph.nodes[node])
+        for (int i = 0; i < this->network_graph->nodes[node].size(); i++)
         {
-            if (x.to != node_from && !visited[x.to])
+            std::cout << "for edge " << this->network_graph->nodes[node][i].to << '\n';
+            if (this->network_graph->nodes[node][i].to != node_from && !visited[this->network_graph->nodes[node][i].to])
             {
-                cand_nodes.push_back(x.to);
+                cand_nodes.push_back(this->network_graph->nodes[node][i].to);
             }
         }
+        std::cout << "CAND NODES ADDED\n";
+
+
         if (cand_nodes.size() == 0)
         {
             return;
         }
-
         int neighbour = rand() % cand_nodes.size();
-        route.nodes.push_back(cand_nodes[neighbour]);
+        // std::cout << neighbour << ' ' << cand_nodes.size() << '\n';
+
+        std::cout << "NEIGHBOUR CREATED\n";
+
+        route.add_node(cand_nodes[neighbour]);
+
+        std::cout << "NEW NODE ADDED\n";
+
 
         if (route.size < max_length)
         {
+            std::cout << "WILL CONTINUE EXPLORING\n";
+
             this->explore(visited, cand_nodes[neighbour], node, route, max_length);
         }
+        std::cout << "ALL EXPLORING FINISHED\n";
+
     }
 }
 Route NSGA2::generate_random_route()
@@ -53,16 +82,61 @@ Route NSGA2::generate_random_route()
     int max_length = rand() % 10 + 4;
     std::vector<bool> visited(this->network_size, false);
     Route random_route;
-    random_route.nodes.push_back(random_start_point);
-    this->explore(visited, random_start_point, -1, random_route, max_length);
+    random_route.add_node(random_start_point);
+    
+    int node = random_start_point;
+    int node_from = -1;
+
+    while (random_route.size < max_length)
+    {
+        if (!visited[node])
+        {
+            visited[node] = true;
+            std::cout << "EXPLORING in node " << node << "\n";
+            std::cout << "It has " << this->network_graph->nodes[node].size() << " edges\n";
+            std::vector<int> cand_nodes;
+            for (int i = 0; i < this->network_graph->nodes[node].size(); i++)
+            {
+                std::cout << "for edge " << this->network_graph->nodes[node][i].to << '\n';
+                if (this->network_graph->nodes[node][i].to != node_from && !visited[this->network_graph->nodes[node][i].to])
+                {
+                    cand_nodes.push_back(this->network_graph->nodes[node][i].to);
+                }
+            }
+            std::cout << "CAND NODES ADDED\n";
+            if (cand_nodes.size() == 0)
+            {
+                break;
+            }
+            int neighbour = rand() % cand_nodes.size();
+            // std::cout << neighbour << ' ' << cand_nodes.size() << '\n';
+
+            std::cout << "NEIGHBOUR CREATED\n";
+
+            random_route.add_node(cand_nodes[neighbour]);
+
+            std::cout << "NEW NODE ADDED\n";
+
+            node_from = node;
+            node = cand_nodes[neighbour];
+
+        }
+    }
+
+    return random_route;
+
+    
+
 }
+
 RouteSet NSGA2::generate_individual()
 {
-    RouteSet random_routeset = RouteSet(this->network_graph, this->demand_matrix);
+    RouteSet random_routeset;
+
     for (int i = 0; i < this->num_of_routes; i++)
     {
         Route random_route = this->generate_random_route();
-        random_routeset.routes.push_back(random_route);
+        random_routeset.add_route(random_route);
     }
     return random_routeset;
 }
@@ -70,10 +144,11 @@ RouteSet NSGA2::generate_individual()
 Population NSGA2::initialize_population()
 {
     Population population;
+
     for (int i = 0; i < this->num_of_individuals; i++)
     {
         RouteSet individual = this->generate_individual();
-        individual.calculate_objectives();
+        this->calculate_objectives(individual);
         population.all_population.push_back(individual);
     }
     return population;
@@ -81,11 +156,12 @@ Population NSGA2::initialize_population()
 
 void NSGA2::fast_non_dominated_sort(Population & population)
 {
-    this->population.fronts = {{}};
+    this->population.fronts.push_back(std::vector<RouteSet>{});
     for (auto & individual: population.all_population)
     {
+        std::cout << "INSIDE FNDS\n";
+
         individual.domination_count = 0;
-        individual.dominated_solutions = {};
         for (auto & other_individual : population.all_population)
         {
             if (individual.dominates(other_individual))
@@ -103,6 +179,8 @@ void NSGA2::fast_non_dominated_sort(Population & population)
             population.fronts[0].push_back(individual);
         }
     }
+        std::cout << "INSIDE FNDS\n";
+
     int i = 0;
     while (population.fronts[i].size() > 0)
     {
@@ -170,27 +248,38 @@ int NSGA2::crowding_operator(const RouteSet & individual, const RouteSet & other
 
 std::vector<RouteSet> NSGA2::create_children(Population population)
 {
+    std::cout << "CREATING OFFSPRING\n";
     std::vector<RouteSet> children;
     while (children.size() < population.all_population.size())
     {
+        std::cout << "creating parents\n";
         RouteSet parent1 = this->tournament(population);
         RouteSet parent2 = this->tournament(population);
 
-        while (parent1.routes == parent2.routes)
+        while (parent1.equals(parent2))
         {
             parent2 = this->tournament(population);
         }
+        std::cout << "parents created\n";
+
         std::vector<RouteSet> offspring = this->crossover(parent1, parent2);
         RouteSet child1 = offspring[0];
         RouteSet child2 = offspring[1];
+
+        std::cout << "children created\n";
+
         this->mutate(child1);
         this->mutate(child2);
-        child1.calculate_objectives();
-        child2.calculate_objectives();
+        std::cout << "children mutated\n";
+
+        this->calculate_objectives(child1);
+        this->calculate_objectives(child2);
 
         children.push_back(child1);
         children.push_back(child2);
     }
+    std::cout << "FINISHED OFFSPRING\n";
+
     return children;
 }
 
@@ -208,6 +297,8 @@ RouteSet NSGA2::tournament(Population population)
         {
             participant = rand() % population.all_population.size();
         }
+        participants.push_back(population.all_population[participant]);
+        n++;
         taken[participant] = true;
     }
     RouteSet * best = nullptr;
@@ -276,7 +367,7 @@ void NSGA2::mutate(RouteSet routeset)
     {
         for (int i = 1; i < routeset.routes.size(); i++)
         {
-            int end_point = routeset.routes[i].nodes.size();
+            int end_point = routeset.routes[i].nodes.size() - 1;
             if (node == routeset.routes[i].nodes[0])
             {
                 if (routeset.routes[i].nodes.size() > 2)
@@ -297,8 +388,11 @@ void NSGA2::mutate(RouteSet routeset)
 
 std::vector<RouteSet> NSGA2::run()
 {
+
     this->population = this->initialize_population();
+
     this->fast_non_dominated_sort(this->population);
+    std::cout << "HASTA ACA\n";
 
     for (auto & front : this->population.fronts)
     {
@@ -309,7 +403,9 @@ std::vector<RouteSet> NSGA2::run()
 
     for (int g = 0; g < this->generations; g++)
     {   
+        std::cout << "Generacion " << g + 1 << ":\n";
         this->population.all_population.insert(this->population.all_population.end(), children.begin(), children.end());
+
         this->fast_non_dominated_sort(this->population);
         Population new_population;
         int front_num = 0;
@@ -338,3 +434,56 @@ std::vector<RouteSet> NSGA2::run()
     return returned_population->fronts[0]; 
 }  
 
+
+
+double NSGA2::calculate_user_cost(const RouteSet & rs)
+{
+    int total_time = 0;
+    for (const auto & route : rs.routes)
+    {
+        for (int i = 0; i < route.size - 1; i++)
+        {
+            int nw_x = 0;
+            for (const auto & edge : this->network_graph->nodes[route.nodes[i]])
+            {
+                if (edge.to == route.nodes[i + 1])
+                {
+                    nw_x = edge.value;
+                }
+            }
+            total_time += (*this->demand_matrix)[route.nodes[i]][route.nodes[i + 1]] * nw_x;
+        }
+    }
+    return total_time;
+}
+
+double NSGA2::calculate_coverage(const RouteSet & rs)
+{
+    double total_demand = 0;
+    for (int i = 0; i < this->demand_matrix->size(); i++)
+    {
+        for (int j = 0; j < this->demand_matrix->size(); j++)
+        {
+            total_demand += (*this->demand_matrix)[i][j];
+        }
+    }
+    double coverage = 0;
+
+    for (const auto & route : rs.routes)
+    {
+        for (int i = 0; i < route.size; i++)
+        {
+            for (int j = i + 1; j < route.size; j++)
+            {
+                coverage += (*this->demand_matrix)[i][j];
+            }
+        }
+    }
+
+    return coverage / total_demand;
+}
+
+void NSGA2::calculate_objectives(RouteSet & rs)
+{
+    rs.objectives = {this->calculate_user_cost(rs), this->calculate_coverage(rs)};
+}
