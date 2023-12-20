@@ -1,5 +1,3 @@
-from individual import Individual
-import random
 import csv
 
 class Edge:
