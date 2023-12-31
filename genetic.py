@@ -4,7 +4,7 @@ from population import Population
 from routeset_genetic import RouteSet
 
 class GeneticAlgorithm:
-    def __init__(self, generations, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob):
+    def __init__(self, generations, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob, min_route, max_route):
         self.generations = generations
         self.num_of_individuals = num_of_individuals
         self.graph = tndp.network
@@ -14,6 +14,8 @@ class GeneticAlgorithm:
         self.network_size = tndp.size
         self.num_of_tour_particips = num_of_tour_particips
         self.tournament_prob = tournament_prob
+        self.min_route = min_route
+        self.max_route = max_route
 
     def explore(self, visited, node, node_from, route, max_length):
         if node not in visited:
@@ -33,7 +35,7 @@ class GeneticAlgorithm:
 
     def generate_random_route(self):
         random_start_point = random.randrange(0, self.network_size)
-        max_length = random.randrange(12, 26)
+        max_length = random.randrange(self.min_route - 1, self.max_route) + 1
         visited = []
         random_route = [random_start_point]
         self.explore(visited, random_start_point, -1, random_route, max_length)

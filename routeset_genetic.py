@@ -35,7 +35,7 @@ class RouteSet:
             for i in range(len(route) - 1):
                 for j in range(i + 1, len(route)):
                     coverage += demand_matrix[i][j]
-        return coverage / total_demand
+        return coverage / total_demand * -1
 
     def calculate_fitness(self, graph, demand_matrix):
         self.fitness = self.user_cost(graph, demand_matrix) + self.find_coverage(graph, demand_matrix)

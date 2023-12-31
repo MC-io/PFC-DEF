@@ -5,7 +5,7 @@ from routeset import RouteSet
 import copy
 
 class NSGAII:
-    def __init__(self, generations, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob):
+    def __init__(self, generations, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob, min_route, max_route):
         self.generations = generations
         self.num_of_individuals = num_of_individuals
         self.graph = tndp.network
@@ -15,7 +15,8 @@ class NSGAII:
         self.network_size = tndp.size
         self.num_of_tour_particips = num_of_tour_particips
         self.tournament_prob = tournament_prob
-
+        self.min_route = min_route
+        self.max_route = max_route
 
     def explore(self, visited, node, node_from, route, max_length):
         if node not in visited:
@@ -35,7 +36,7 @@ class NSGAII:
 
     def generate_random_route(self):
         random_start_point = random.randrange(0, self.network_size)
-        max_length = random.randrange(11, 25) + 1
+        max_length = random.randrange(self.min_route - 1, self.max_route) + 1
         visited = []
         random_route = [random_start_point]
         self.explore(visited, random_start_point, -1, random_route, max_length)
@@ -84,7 +85,7 @@ class NSGAII:
     
     def calculate_crowding_distance(self, front):
         if len(front) > 0:
-            print(len(front))
+            #print(len(front))
             solutions_num = len(front)
             for individual in front:
                 individual.crowding_distance = 0
@@ -98,7 +99,7 @@ class NSGAII:
                 if scale == 0: scale = 1
                 for i in range(1, solutions_num - 1):
                     front[i].crowding_distance += (front[i + 1].objectives[m] - front[i - 1].objectives[m]) / scale
-            print(len(front))
+            #print(len(front))
             
     
     def crowding_operator(self, individual, other_individual):
@@ -196,12 +197,12 @@ class NSGAII:
 
 
         for _ in range(self.generations):
-            print("Generacion {}".format(_))
+            #print("Generacion {}".format(_))
             self.population.extend(children)
             self.fast_non_dominated_sort(self.population)
             new_population = Population()
             front_num = 0
-            print(len(self.population.fronts))
+            #print(len(self.population.fronts))
             while len(new_population) + len(self.population.fronts[front_num]) <= self.num_of_individuals:
                 self.calculate_crowding_distance(self.population.fronts[front_num])
                 for rs in self.population.fronts[front_num]:
@@ -217,12 +218,13 @@ class NSGAII:
             for front in self.population.fronts:
                 self.calculate_crowding_distance(front)
             children = self.create_children(self.population)
-
+            """
             for routeset in returned_population.fronts[0]:
                 print("part:")
                 for route in routeset.routes:
                     for a in route:
                         print("{} - ".format(a), end="")
                     print("")
+            """
         return returned_population.fronts[0]
             
