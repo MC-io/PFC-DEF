@@ -20,6 +20,7 @@ class NSGAII:
 
     def explore(self, visited, node, node_from, route, max_length):
         if node not in visited:
+            visited.append(node)
             cand_nodes = []
             for x in self.graph.nodes[node]:
                 if x.to != node_from and x.to not in visited:
@@ -218,13 +219,16 @@ class NSGAII:
             for front in self.population.fronts:
                 self.calculate_crowding_distance(front)
             children = self.create_children(self.population)
-            """
+
+            obj_1 = 0
+            obj_2 = 0
             for routeset in returned_population.fronts[0]:
-                print("part:")
-                for route in routeset.routes:
-                    for a in route:
-                        print("{} - ".format(a), end="")
-                    print("")
-            """
+                obj_1 += routeset.objectives[0]
+                obj_2 += routeset.objectives[1]
+
+            print("Promedio F1 en Generacion {}: {}".format(_ + 1, obj_1 / len(returned_population.fronts[0])))
+            print("Promedio F2 en Generacion {}: {}".format(_ + 1, obj_2 / len(returned_population.fronts[1])))
+
+
         return returned_population.fronts[0]
             

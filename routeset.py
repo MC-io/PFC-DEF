@@ -44,6 +44,16 @@ class RouteSet:
                 for j in range(i + 1, len(route)):
                     coverage += demand_matrix[i][j]
         return coverage / total_demand * -1
+    
+
+    def find_operator_cost(self, graph, demand_matrix):
+        cost_sum = 0
+        for route in self.routes:
+            #print(len(route))
+            for i in range(len(route) - 1):
+                #print("{} {}".format(route[i], route[i + 1]))
+                cost_sum += graph.get_edge(route[i], route[i + 1]).value
+        return cost_sum * -1
 
     def calculate_objectives(self, graph, demand_matrix):
         self.objectives = [self.user_cost(graph, demand_matrix), self.find_coverage(graph, demand_matrix)]

@@ -35,11 +35,11 @@ def main():
     avg_coverage = sum(g_coverage) / len(g_coverage)
 
     print("Costo de Usuario promedio: {}".format(avg_user_cost))
-    print("Cobertura promedio: {}".format(avg_coverage))
+    print("Costo de Operador promedio: {}".format(avg_coverage))
 
 
     plt.xlabel('Costo de Usuario', fontsize=15)
-    plt.ylabel('Cobertura', fontsize=15)
+    plt.ylabel('Costo de Operador', fontsize=15)
     plt.scatter(g_user_cost, g_coverage)
     plt.savefig('modern_mandl.png')
     plt.show()
