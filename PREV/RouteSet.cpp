@@ -24,3 +24,20 @@ void RouteSet::add_route(Route & route)
     this->routes.push_back(route);
     this->size++;
 }
+
+Graph RouteSet::convert_to_graph(Graph & graph)
+{
+    Graph routeset_graph = Graph(graph.nodes.size());
+
+    for (auto & route : this->routes)
+    {
+        for (int i = 0; i < route.nodes.size() - 1; i++)
+        {
+            float value = graph.get_edge(route.nodes[i], route.nodes[i + 1])->value;
+            routeset_graph.add_edge(route.nodes[i], route.nodes[i + 1], value);
+            routeset_graph.add_edge(route.nodes[i + 1], route.nodes[i], value);
+        }
+    }
+    return routeset_graph;
+
+}

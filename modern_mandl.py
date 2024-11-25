@@ -12,15 +12,14 @@ def main():
     g_user_cost = []
     g_coverage = []
 
-    for nroutes in range(5,8):
-        nsga = NSGAII(num_of_individuals=50, generations=20, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=8)
+    for nroutes in range(6,9):
+        nsga = NSGAII(num_of_individuals=50, generations=300, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=8)
         """
         for i in range(len(nsga.graph.nodes)):
             for edge in nsga.graph.nodes[i]:
                 print("{} - {}".format(i, edge.to))
         """
         final_population = nsga.run()
-
 
         func = [i.objectives for i in final_population]
 

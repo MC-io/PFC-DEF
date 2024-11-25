@@ -1,5 +1,5 @@
 import csv
-
+import heapq
 class Edge:
     def __init__(self, value, to):
         self.value = value
@@ -18,6 +18,25 @@ class Graph:
         for edge in self.nodes[a]:
             if edge.to == b:
                 return edge
+        return None
+    
+    def get_shortest_path_length(self, start, end):
+        distances = [float('inf')] * len(self.nodes)
+        distances[start] = 0
+        
+        priority_queue = [(0, start)]
+        
+        while priority_queue:
+            current_distance, current_node = heapq.heappop(priority_queue)
+            if current_node == end:
+                return current_distance
+            if current_distance > distances[current_node]:
+                continue
+            for edge in self.nodes[current_node]:
+                distance = current_distance + edge.value
+                if distance < distances[edge.to]:
+                    distances[edge.to] = distance
+                    heapq.heappush(priority_queue, (distance, edge.to))
         return None
 
 class TNDP:

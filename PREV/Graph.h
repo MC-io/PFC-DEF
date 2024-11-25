@@ -14,6 +14,10 @@ public:
     Graph();
 
     void add_edge(int a, int b, int value);
+    Edge * get_edge(int a, int b);
+    int get_shortest_path_length(int start, int end);
+
+
 };
 
 #endif

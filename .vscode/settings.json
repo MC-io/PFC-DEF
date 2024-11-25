@@ -52,6 +52,18 @@
         "xloctime": "cpp",
         "xmemory": "cpp",
         "xtr1common": "cpp",
-        "xutility": "cpp"
+        "xutility": "cpp",
+        "xtree": "cpp",
+        "array": "cpp",
+        "deque": "cpp",
+        "functional": "cpp",
+        "list": "cpp",
+        "queue": "cpp",
+        "random": "cpp",
+        "ranges": "cpp",
+        "set": "cpp",
+        "span": "cpp",
+        "unordered_map": "cpp",
+        "xhash": "cpp"
     }
 }

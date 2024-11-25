@@ -1,8 +1,10 @@
 import random
+import multiprocessing
 import numpy as np
 from population import Population
 from routeset import RouteSet
 import copy
+import time
 
 class NSGAII:
     def __init__(self, generations, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob, min_route, max_route):
@@ -17,6 +19,19 @@ class NSGAII:
         self.tournament_prob = tournament_prob
         self.min_route = min_route
         self.max_route = max_route
+
+    def absorption(self, routeset):
+        routes_to_absorb = []
+        for i in range(len(routeset.routes) - 1, -1, -1):
+            for j in range(len(routeset.routes)):
+                if i != j and j not in routes_to_absorb and i not in routes_to_absorb and len(routeset.routes[i]) <= len(routeset.routes[j]):
+                    for k in range(len(routeset.routes[j]) - len(routeset.routes[i]) + 1):
+                        possible_subroute = routeset.routes[j][k:k + len(routeset.routes[i])]
+                        possible_subroute_reverse = possible_subroute[::-1]
+                        if possible_subroute == routeset.routes[i] or possible_subroute_reverse == routeset.routes[i]:
+                            routes_to_absorb.append(i)
+        for index in routes_to_absorb:
+            del routeset.routes[index]
 
     def explore(self, visited, node, node_from, route, max_length):
         if node not in visited:
@@ -35,27 +50,92 @@ class NSGAII:
             if len(route) < max_length:
                 self.explore(visited, cand_nodes[neighbour], node, route, max_length)
 
-    def generate_random_route(self):
+    def generate_random_route(self, not_elected_nodes=None):
         random_start_point = random.randrange(0, self.network_size)
+        if not_elected_nodes is not None and len(not_elected_nodes) > 0:
+            random_start_point = random.choice(not_elected_nodes)
+            not_elected_nodes.remove(random_start_point)
         max_length = random.randrange(self.min_route - 1, self.max_route) + 1
         visited = []
         random_route = [random_start_point]
         self.explore(visited, random_start_point, -1, random_route, max_length)
         return random_route
     
+    def get_not_elected_nodes(self, routeset):
+        elected_nodes = set()
+        for route in routeset.routes:
+            for a in route:
+                elected_nodes.add(a)
+
+        elected_nodes_list = list(elected_nodes)
+        elected_nodes_list.sort()
+
+        not_elected_nodes = []
+        for i in range(self.network_size):
+            if i not in elected_nodes_list:
+                not_elected_nodes.append(i)
+
+        return not_elected_nodes;
+    
+    def add_node_to_closest_end_terminal(self, node):
+        pass
+
+    def add_not_connected_nodes(self, routeset):
+        not_connected = self.get_not_elected_nodes(routeset)
+
+        for node in not_connected:
+            self.add_node_to_closest_end_terminal(node)
+
+
+
     def generate_individual(self):
         random_routeset = RouteSet()
-        for i in range(self.num_of_routes):
-            random_route = self.generate_random_route()
-            random_routeset.routes.append(random_route)
+        while len(random_routeset.routes) < self.num_of_routes:
+            not_elected_nodes = None
+            # Si al menos ya se hizo una iteracion y absorcion
+            if len(random_routeset.routes) > 0:
+                not_elected_nodes = self.get_not_elected_nodes(random_routeset)
+            while len(random_routeset.routes) < self.num_of_routes:
+                random_route = self.generate_random_route(not_elected_nodes=not_elected_nodes)
+                random_routeset.routes.append(random_route)
+            self.absorption(random_routeset)
+
         return random_routeset
+    
+    def create_individual(self, lock, shared_list):
+        individual = self.generate_individual()
+        individual.calculate_objectives(self.graph, self.demand_matrix)
+        with lock:
+            shared_list.append(individual)
             
     def initialize_population(self):
+        start = time.time()
         population = Population()
+        manager = multiprocessing.Manager()
+        lock = multiprocessing.Lock()
+        shared_list = manager.list() 
+        processes = []
+        
         for _ in range(self.num_of_individuals):
-            individual = self.generate_individual()
-            individual.calculate_objectives(self.graph, self.demand_matrix)
-            population.append(individual)
+            p = multiprocessing.Process(target=self.create_individual, args=(lock, shared_list))
+            processes.append(p)
+            p.start()
+
+        for p in processes:
+            p.join()
+
+        population.population = list(shared_list)
+
+        obj_1 = 0
+        obj_2 = 0
+        for routeset in population.population:
+            obj_1 += routeset.objectives[0]
+            obj_2 += routeset.objectives[1]
+
+        end = time.time()
+        print("Tiempo de inicializacion: {}".format(end - start))
+        print("Promedio F1 en Inicializacion: {}".format(obj_1 / len(population.population)))
+        print("Promedio F2 en Inicializacion: {}".format(obj_2 / len(population.population)))
         return population
 
     def fast_non_dominated_sort(self, population):
@@ -227,7 +307,7 @@ class NSGAII:
                 obj_2 += routeset.objectives[1]
 
             print("Promedio F1 en Generacion {}: {}".format(_ + 1, obj_1 / len(returned_population.fronts[0])))
-            print("Promedio F2 en Generacion {}: {}".format(_ + 1, obj_2 / len(returned_population.fronts[1])))
+            print("Promedio F2 en Generacion {}: {}".format(_ + 1, obj_2 / len(returned_population.fronts[0])))
 
 
         return returned_population.fronts[0]

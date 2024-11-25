@@ -12,7 +12,7 @@ def main():
     g_user_cost = []
     g_coverage = []
 
-    for nroutes in range(56,64):
+    for nroutes in range(60,61):
         nsga = NSGAII(num_of_individuals=50, generations=20, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=12, max_route=25  )
         """
         for i in range(len(nsga.graph.nodes)):

@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <time.h>
 #include <iostream>
+#include <random>
+#include <omp.h>
 
 int main() 
 {
-
-    srand(time(NULL));
-
     int num_nodes = 15;
     TNDP tndp(num_nodes);
     tndp.read_network_from_file("C:\\Users\\pc\\Desktop\\8vo Semestre\\Proyecto Final de Carrera 1\\PFC-DEF\\networks\\Mandl\\mandl_links.csv");
@@ -24,10 +23,12 @@ int main()
         std::cout << '\n';
     }
 
-    NSGA2 nsga(100, 50, tndp, 3, 2, 0.9);
+    NSGA2 nsga(4, 5, tndp, 3, 2, 0.9, 4, 8);
+
+    
     std::vector<RouteSet> final_population = nsga.run();
     
-
+    
 /*
     srand(time(NULL));
     std::cout << "HOLAPASADEPUESDELSRAND\n";
