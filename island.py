@@ -10,9 +10,9 @@ class Island:
     def __init__(self, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob, min_route, max_route):
         self.num_of_individuals = num_of_individuals
         self.graph = tndp.network
-        self.dm_oemand_matrix = tndp.demand_matrix
+        self.demand_matrix = tndp.demand_matrix
         self.population = None
-        self.nuf_routes = num_of_routes
+        self.num_of_routes = num_of_routes
         self.network_size = tndp.size
         self.num_of_tour_particips = num_of_tour_particips
         self.tournament_prob = tournament_prob
@@ -273,11 +273,15 @@ class Island:
     def exile_migrants(self, num_migrants):
         if num_migrants > len(self.population):
             num_migrants = len(self.population)
-        migrants = random.sample(self.population, num_migrants)
-        self.population = [ind for ind in self.population if ind not in migrants]
+        migrants = random.sample(self.population.population, num_migrants)
+        self.population.population = [ind for ind in self.population.population if ind not in migrants]
         return migrants
-
-
+    
+    def receive_migrants(self, migrants):
+        self.population.extend(migrants)
+        self.fast_non_dominated_sort(self.population)
+        for front in self.population.fronts:
+            self.calculate_crowding_distance(front)
 
     def execute_generation(self):
         children = self.create_children(self.population)
