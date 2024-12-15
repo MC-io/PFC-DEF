@@ -37,6 +37,8 @@ class RouteSet:
                         dt += demand_matrix[i][j] * t
                     else:
                         count += 1
+        if total_demand == 0:
+            return 5 + count / (len(demand_matrix) / 2)
         return dt / total_demand + count / (len(demand_matrix) / 2)
 
     def find_coverage(self, graph, demand_matrix):    

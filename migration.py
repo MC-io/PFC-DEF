@@ -1,4 +1,4 @@
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from island import Island
 from population import Population
 
@@ -9,9 +9,12 @@ class Migration:
         self.islands = []
         for i in range(num_islands):
             num_of_individuals = num_population // num_islands
-            if i <= num_population % num_islands:
+            if i < num_population % num_islands:
                 num_of_individuals += 1
-            self.islands.append(Island(num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob, min_route, max_route))
+            island = Island(num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob, min_route, max_route)
+            self.islands.append(island)
+        for island in self.islands:
+            print(island.num_of_individuals)
         self.migration_every_gen = migration_every_gen
         self.num_of_generations = num_of_generations
         self.num_migrants = num_migrants
@@ -82,23 +85,20 @@ class Migration:
                 target_islands_index = random.choice([x for x in range(len(self.islands)) if x != i])
                 redistribution_plan[target_islands_index].append(migrant)
 
-        with ThreadPoolExecutor(max_workers=12) as executor:
+        with ThreadPoolExecutor(max_workers=5) as executor:
             futures = [executor.submit(self.islands[i].receive_migrants, redistribution_plan[i]) for i in range(len(redistribution_plan))]
-            for future in futures:
-                print(future.result())
+            for future in as_completed(futures):
+                future.result()
 
     def run(self):
-        with ThreadPoolExecutor(max_workers=12) as executor:
-            futures = [executor.submit(island.initialize_island) for island in self.islands]
-            for future in futures:
-                print(future.result())
-        futures = []
+        for island in self.islands:
+            island.initialize_island() 
         for generation in range(self.num_of_generations):
             with ThreadPoolExecutor(max_workers=12) as executor:
-                futures = [executor.submit(island.execute_generation) for island in self.islands]
+                futures = [executor.submit(island.execute_generation, ind) for ind, island in enumerate(self.islands)]
                 for future in futures:
-                    print(future.result())
-            if generation % self.migration_every_gen == 0:
+                    future.result()
+            if generation + 1 % self.migration_every_gen == 0:
                 self.migrate()
         
         

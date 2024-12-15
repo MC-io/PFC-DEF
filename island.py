@@ -1,5 +1,4 @@
 import random
-import multiprocessing
 import numpy as np
 from population import Population
 from routeset import RouteSet
@@ -101,29 +100,18 @@ class Island:
 
         return random_routeset
     
-    def create_individual(self, lock, shared_list):
+    def create_individual(self):
         individual = self.generate_individual()
         individual.calculate_objectives(self.graph, self.demand_matrix)
-        with lock:
-            shared_list.append(individual)
             
     def initialize_population(self):
         start = time.time()
         population = Population()
-        manager = multiprocessing.Manager()
-        lock = multiprocessing.Lock()
-        shared_list = manager.list() 
-        processes = []
         
         for _ in range(self.num_of_individuals):
-            p = multiprocessing.Process(target=self.create_individual, args=(lock, shared_list))
-            processes.append(p)
-            p.start()
-
-        for p in processes:
-            p.join()
-
-        population.population = list(shared_list)
+            individual = self.generate_individual()
+            individual.calculate_objectives(self.graph, self.demand_matrix)
+            population.population.append(individual)
 
         obj_1 = 0
         obj_2 = 0
@@ -283,16 +271,16 @@ class Island:
         for front in self.population.fronts:
             self.calculate_crowding_distance(front)
 
-    def execute_generation(self):
+    def execute_generation(self, num):
         children = self.create_children(self.population)
         self.population.extend(children)
         self.fast_non_dominated_sort(self.population)
         new_population = Population()
 
         front_num = 0
-        #print(len(self.population.fronts))
         while len(new_population) + len(self.population.fronts[front_num]) <= self.num_of_individuals:
             self.calculate_crowding_distance(self.population.fronts[front_num])
+            #print(len(self.population.fronts[front_num]), ' ', num)
             for rs in self.population.fronts[front_num]:
                 new_population.append(copy.deepcopy(rs))
             front_num += 1

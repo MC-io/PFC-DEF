@@ -14,7 +14,7 @@ def main():
     g_coverage = []
 
     for nroutes in range(6,9):
-        nsga = Migration(num_population=100, num_of_generations=100, num_islands=6, migration_every_gen=10, num_migrants=5, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=8)
+        nsga = Migration(num_population=100, num_of_generations=300, num_islands=5, migration_every_gen=20, num_migrants=3, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=8)
         """
         for i in range(len(nsga.graph.nodes)):
             for edge in nsga.graph.nodes[i]:
