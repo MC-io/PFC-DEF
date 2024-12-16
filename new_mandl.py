@@ -1,4 +1,4 @@
-
+import time
 import matplotlib.pyplot as plt
 from TNDP import TNDP
 from migration import Migration
@@ -13,7 +13,9 @@ def main():
     g_user_cost = []
     g_coverage = []
 
-    for nroutes in range(6,9):
+    start = time.time()
+
+    for nroutes in range(6,7):
         nsga = Migration(num_population=100, num_of_generations=300, num_islands=5, migration_every_gen=20, num_migrants=3, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=8)
         """
         for i in range(len(nsga.graph.nodes)):
@@ -36,7 +38,8 @@ def main():
 
     print("Costo de Usuario promedio: {}".format(avg_user_cost))
     print("Costo de Operador promedio: {}".format(avg_coverage))
-
+    end = time.time()
+    print(f"Tiempo total de ejecucion: {end - start}")
 
     plt.xlabel('Costo de Usuario', fontsize=15)
     plt.ylabel('Costo de Operador', fontsize=15)

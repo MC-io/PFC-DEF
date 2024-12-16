@@ -1,4 +1,4 @@
-
+import time 
 import matplotlib.pyplot as plt
 from TNDP import TNDP
 from nsga2 import NSGAII
@@ -12,7 +12,8 @@ def main():
     g_user_cost = []
     g_coverage = []
 
-    for nroutes in range(6,9):
+    start = time.time()
+    for nroutes in range(6,7):
         nsga = NSGAII(num_of_individuals=100, generations=300, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=8)
         """
         for i in range(len(nsga.graph.nodes)):
@@ -36,7 +37,8 @@ def main():
     print("Costo de Usuario promedio: {}".format(avg_user_cost))
     print("Costo de Operador promedio: {}".format(avg_coverage))
 
-
+    end = time.time()
+    print(f"Tiempo total de ejecucion: {end - start}")
     plt.xlabel('Costo de Usuario', fontsize=15)
     plt.ylabel('Costo de Operador', fontsize=15)
     plt.scatter(g_user_cost, g_coverage)

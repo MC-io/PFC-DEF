@@ -75,9 +75,6 @@ class Migration:
 
     def migrate(self):
         redistribution_plan = [[] for _ in range(len(self.islands))]
-        print(len(redistribution_plan))
-        print(len(self.islands))
-
 
         for i in range(len(self.islands)):
             migrants = self.islands[i].exile_migrants(self.num_migrants)
@@ -91,12 +88,16 @@ class Migration:
                 future.result()
 
     def run(self):
-        for island in self.islands:
-            island.initialize_island() 
+        with ThreadPoolExecutor(max_workers=12) as executor:
+            futures = [executor.submit(island.initialize_island) for island in self.islands]
+            for future in as_completed(futures) :
+                    future.result()
+
         for generation in range(self.num_of_generations):
+            print(f"Generacion {generation}")
             with ThreadPoolExecutor(max_workers=12) as executor:
                 futures = [executor.submit(island.execute_generation, ind) for ind, island in enumerate(self.islands)]
-                for future in futures:
+                for future in as_completed(futures) :
                     future.result()
             if generation + 1 % self.migration_every_gen == 0:
                 self.migrate()

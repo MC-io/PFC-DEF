@@ -1,7 +1,7 @@
 
 import matplotlib.pyplot as plt
 from TNDP import TNDP
-from nsga2 import NSGAII
+from migration import Migration
 import time
 
 def main():
@@ -17,7 +17,7 @@ def main():
     start = time.time()
 
     for nroutes in range(56,57):
-        nsga = NSGAII(num_of_individuals=50, generations=50, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=10, max_route=22  )
+        nsga = Migration(num_population=50, num_of_generations=50, num_islands=5, migration_every_gen=5, num_migrants=2, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=10, max_route=22)
         """
         for i in range(len(nsga.graph.nodes)):
             for edge in nsga.graph.nodes[i]:
@@ -39,6 +39,7 @@ def main():
 
     print("Costo de Usuario promedio: {}".format(avg_user_cost))
     print("Cobertura promedio: {}".format(avg_coverage))
+
     end = time.time()
     print(f"Tiempo total de ejecucion: {end - start}")
 
