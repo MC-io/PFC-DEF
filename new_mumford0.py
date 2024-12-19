@@ -16,7 +16,7 @@ def main():
     start = time.time()
 
     for nroutes in range(12,13):
-        nsga = Migration(num_population=100, num_of_generations=200, num_islands=4, migration_every_gen=8, num_migrants=4, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=15)
+        nsga = Migration(num_population=20, num_of_generations=20, num_islands=4, migration_every_gen=8, num_migrants=4, tndp=tndp, num_of_routes=nroutes, num_of_tour_particips=2, tournament_prob=0.9, min_route=2, max_route=15)
         """
         for i in range(len(nsga.graph.nodes)):
             for edge in nsga.graph.nodes[i]:
@@ -31,6 +31,9 @@ def main():
 
         g_user_cost.extend(user_cost)
         g_coverage.extend(coverage)
+
+        middle_solution = final_population[len(final_population) // 2]
+        middle_solution.show_plot("networks\\Mumford0\\mumford0_links.csv", "networks\\Mumford0\\mumford0_nodes.csv")
     
 
     avg_user_cost = sum(g_user_cost) / len(g_user_cost)

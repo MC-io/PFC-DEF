@@ -31,6 +31,14 @@ def main():
 
         g_user_cost.extend(user_cost)
         g_coverage.extend(coverage)
+
+        best_sol_f1 = None
+        lowest_f1 = 9999999
+        for sol in final_population:
+            if sol.objectives[0] < lowest_f1:
+                best_sol_f1 = sol
+
+        best_sol_f1.show_plot("networks\\Mandl\\mandl_links.csv", "networks\\Mandl\\mandl_nodes.csv")
     
 
     avg_user_cost = sum(g_user_cost) / len(g_user_cost)

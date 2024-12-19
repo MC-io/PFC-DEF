@@ -1,5 +1,8 @@
 from TNDP import Graph
-
+import pandas as pd
+import networkx as nx
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 class RouteSet:
     def __init__(self):
         self.routes = []
@@ -71,3 +74,50 @@ class RouteSet:
                 routeset_graph.add_edge(route[i], route[i + 1], value)
                 routeset_graph.add_edge(route[i + 1], route[i], value)
         return routeset_graph
+    
+    def show_plot(self, edges_file, nodes_file):
+
+
+        nodes_df = pd.read_csv(nodes_file)
+        edges_df = pd.read_csv(edges_file)
+
+        G = nx.Graph()  # Use nx.Graph() for undirected graphs
+
+        for _, row in nodes_df.iterrows():
+            G.add_node(int(row['id']), pos=(row['lat'], row['lon']))
+
+        for _, row in edges_df.iterrows():
+            G.add_edge(row['from'], row['to'], weight=row['travel_time'])
+
+        pos = nx.get_node_attributes(G, 'pos')
+
+        plt.figure(figsize=(8, 6))
+
+        for (source, target, weight) in G.edges(data='weight'):
+            x1, y1 = pos[source]
+            x2, y2 = pos[target]
+            plt.text(
+                (x1 + x2) / 2,
+                (y1 + y2) / 2,
+                str(weight),
+                fontsize=8,
+                color="red",
+                ha='center',
+                va='center',
+            )
+
+        cmap = plt.get_cmap('tab10', len(self.routes))  # Use a discrete colormap
+        colors = [cmap(i) for i in range(len(self.routes))]
+        print(colors)
+
+        nx.draw(
+            G, pos, with_labels=True, node_color="skyblue", node_size=300, edge_color="gray", arrows=False, font_weight="bold", font_size=8
+        )
+
+        # Draw routes with different colors
+        for idx, route in enumerate(self.routes):
+            route_edges = [(route[i] + 1, route[i + 1] + 1) for i in range(len(route) - 1)]
+            nx.draw_networkx_edges(G, pos, edgelist=route_edges, edge_color=[colors[idx]], arrows=False, width=5)
+
+
+        plt.show()
