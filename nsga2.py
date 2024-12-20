@@ -5,6 +5,9 @@ from population import Population
 from routeset import RouteSet
 import copy
 import time
+import matplotlib.pyplot as plt
+
+from calculate_hypervolume import calculate_hypervolume
 
 class NSGAII:
     def __init__(self, generations, num_of_individuals, tndp, num_of_routes, num_of_tour_particips, tournament_prob, min_route, max_route):
@@ -276,6 +279,7 @@ class NSGAII:
         children = self.create_children(self.population)
         returned_population = None
 
+        hypervolume_values = []
 
         for _ in range(self.generations):
             #print("Generacion {}".format(_))
@@ -310,5 +314,22 @@ class NSGAII:
             print("Promedio F2 en Generacion {}: {}".format(_ + 1, obj_2 / len(returned_population.fronts[0])))
 
 
+            pareto = returned_population.fronts[0]
+            hv = calculate_hypervolume(pareto)
+            hypervolume_values.append(hv)
+
+        generations = np.arange(1, 101)  # 100 generations
+
+        # Plot the hypervolume convergence
+        plt.figure(figsize=(10, 6))
+        plt.plot(generations, hypervolume_values, label="Hypervolume", color="blue", marker="o")
+        plt.title("Convergence Plot: Hypervolume Indicator")
+        plt.xlabel("Generation")
+        plt.ylabel("Hypervolume")
+        plt.grid(True)
+        plt.legend()
+        plt.show()            
+
         return returned_population.fronts[0]
+
             

@@ -17,7 +17,6 @@ def get_reference_point(pareto_front):
         if sol.objectives[1] > worst_f2:
             worst_f2 = sol.objectives[1]
 
-    
     return [worst_f1 * 1.2, worst_f2 * 1.2]
 
 def calculate_hypervolume(pareto_front_list):
@@ -185,26 +184,26 @@ if __name__ == "__main__":
     #     min_route=2,
     #     max_route=8)
     
-    # run_sequential(network_name='mumford0', num_nodes=30, 
-    #     links_file="networks/Mumford0/mumford0_links.csv",
-    #     demand_file="networks/Mumford0/mumford0_demand.csv",
-    #     nodes_file="networks/Mumford0/mumford0_nodes.csv",
-    #     num_of_individuals=100,
-    #     generations=100,
-    #     num_routes=12,
-    #     min_route=2,
-    #     max_route=15)
-
-
-    run_parallel(network_name='mumford0', num_nodes=30, 
+    run_sequential(network_name='mumford0', num_nodes=30, 
         links_file="networks/Mumford0/mumford0_links.csv",
         demand_file="networks/Mumford0/mumford0_demand.csv",
         nodes_file="networks/Mumford0/mumford0_nodes.csv",
-        num_population=100,
-        num_of_generations=100,
-        num_islands=4,
-        migration_every_gen=8,
-        num_migrants=4,
+        num_of_individuals=100,
+        generations=100,
         num_routes=12,
         min_route=2,
         max_route=15)
+
+
+    # run_parallel(network_name='mumford0', num_nodes=30, 
+    #     links_file="networks/Mumford0/mumford0_links.csv",
+    #     demand_file="networks/Mumford0/mumford0_demand.csv",
+    #     nodes_file="networks/Mumford0/mumford0_nodes.csv",
+    #     num_population=100,
+    #     num_of_generations=100,
+    #     num_islands=4,
+    #     migration_every_gen=8,
+    #     num_migrants=4,
+    #     num_routes=12,
+    #     min_route=2,
+    #     max_route=15)
