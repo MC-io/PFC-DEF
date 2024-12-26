@@ -44,7 +44,7 @@ def main():
     print(f"Tiempo total de ejecucion: {end - start}")
 
     plt.xlabel('Costo de Usuario', fontsize=15)
-    plt.ylabel('Cobertura', fontsize=15)
+    plt.ylabel('Costo de Operador', fontsize=15)
     plt.scatter(g_user_cost, g_coverage)
     plt.savefig('modern_mumford0.png')
     plt.show()

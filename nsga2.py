@@ -1,5 +1,4 @@
 import random
-import multiprocessing
 import numpy as np
 from population import Population
 from routeset import RouteSet
@@ -105,29 +104,18 @@ class NSGAII:
 
         return random_routeset
     
-    def create_individual(self, lock, shared_list):
+    def create_individual(self):
         individual = self.generate_individual()
         individual.calculate_objectives(self.graph, self.demand_matrix)
-        with lock:
-            shared_list.append(individual)
             
     def initialize_population(self):
         start = time.time()
         population = Population()
-        manager = multiprocessing.Manager()
-        lock = multiprocessing.Lock()
-        shared_list = manager.list() 
-        processes = []
         
         for _ in range(self.num_of_individuals):
-            p = multiprocessing.Process(target=self.create_individual, args=(lock, shared_list))
-            processes.append(p)
-            p.start()
-
-        for p in processes:
-            p.join()
-
-        population.population = list(shared_list)
+            individual = self.generate_individual()
+            individual.calculate_objectives(self.graph, self.demand_matrix)
+            population.append(individual)
 
         obj_1 = 0
         obj_2 = 0
@@ -270,7 +258,7 @@ class NSGAII:
 
 
 
-    def run(self):
+    def run(self, all_hv):
         self.population = self.initialize_population()
 
         self.fast_non_dominated_sort(self.population)
@@ -318,17 +306,20 @@ class NSGAII:
             hv = calculate_hypervolume(pareto)
             hypervolume_values.append(hv)
 
+        all_hv.append(hypervolume_values)
         generations = np.arange(1, 101)  # 100 generations
 
+
+
         # Plot the hypervolume convergence
-        plt.figure(figsize=(10, 6))
-        plt.plot(generations, hypervolume_values, label="Hypervolume", color="blue", marker="o")
-        plt.title("Convergence Plot: Hypervolume Indicator")
-        plt.xlabel("Generation")
-        plt.ylabel("Hypervolume")
-        plt.grid(True)
-        plt.legend()
-        plt.show()            
+        # plt.figure(figsize=(10, 6))
+        # plt.plot(generations, hypervolume_values, label="Hypervolume", color="blue", marker="o")
+        # plt.title("Convergence Plot: Hypervolume Indicator")
+        # plt.xlabel("Generation")
+        # plt.ylabel("Hypervolume")
+        # plt.grid(True)
+        # plt.legend()
+        # plt.show()            
 
         return returned_population.fronts[0]
 

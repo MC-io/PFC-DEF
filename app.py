@@ -72,7 +72,7 @@ def run_parallel(network_name, num_nodes, links_file, demand_file, nodes_file, n
     avg_operator_cost = sum(operator_cost) / len(operator_cost)
 
     print("Costo de Usuario promedio: {}".format(avg_user_cost))
-    print("Cobertura promedio: {}".format(avg_operator_cost))
+    print("Costo de operador promedio: {}".format(avg_operator_cost))
     
     end = time.time()
     
@@ -103,7 +103,7 @@ def run_parallel(network_name, num_nodes, links_file, demand_file, nodes_file, n
     plt.show()
 
 
-def run_sequential(network_name, num_nodes, links_file, demand_file, nodes_file, num_routes, num_of_individuals, generations, min_route, max_route):
+def run_sequential(network_name, num_nodes, links_file, demand_file, nodes_file, num_routes, num_of_individuals, generations, min_route, max_route, all_hv=[]):
     tndp = TNDP(num_nodes)
 
     tndp.read_network_from_file(links_file)
@@ -116,7 +116,7 @@ def run_sequential(network_name, num_nodes, links_file, demand_file, nodes_file,
                    tndp=tndp, num_of_routes=num_routes, num_of_tour_particips=2,
                 tournament_prob=0.9, min_route=min_route, max_route=max_route)        
 
-    final_population = nsga.run()
+    final_population = nsga.run(all_hv)
     hypervolume = calculate_hypervolume(final_population)
     print(f"Hipervolumen: {hypervolume}")
     func = [i.objectives for i in final_population]
@@ -129,7 +129,7 @@ def run_sequential(network_name, num_nodes, links_file, demand_file, nodes_file,
     avg_operator_cost = sum(operator_cost) / len(operator_cost)
 
     print("Costo de Usuario promedio: {}".format(avg_user_cost))
-    print("Cobertura promedio: {}".format(avg_operator_cost))
+    print("Costo de Operador promedio: {}".format(avg_operator_cost))
     
     end = time.time()
     
@@ -142,7 +142,7 @@ def run_sequential(network_name, num_nodes, links_file, demand_file, nodes_file,
             lowest_f1 = sol.objectives[0]
             best_sol_f1 = sol
     print(lowest_f1)
-    best_sol_f1.show_plot(links_file, nodes_file)
+    # best_sol_f1.show_plot(links_file, nodes_file)
 
     best_sol_f2 = None
     lowest_f2 = 9999999
@@ -151,13 +151,13 @@ def run_sequential(network_name, num_nodes, links_file, demand_file, nodes_file,
             lowest_f2 = sol.objectives[1]
             best_sol_f2 = sol
     print(lowest_f2)
-    best_sol_f2.show_plot(links_file, nodes_file)
+    # best_sol_f2.show_plot(links_file, nodes_file)
 
-    plt.xlabel('Costo de Usuario', fontsize=15)
-    plt.ylabel('Costo de Operador', fontsize=15)
-    plt.scatter(user_cost, operator_cost)
-    plt.savefig(f'{network_name}.png')
-    plt.show()
+    # plt.xlabel('Costo de Usuario', fontsize=15)
+    # plt.ylabel('Costo de Operador', fontsize=15)
+    # plt.scatter(user_cost, operator_cost)
+    # plt.savefig(f'{network_name}.png')
+    # plt.show()
 
 if __name__ == "__main__":
 
@@ -175,24 +175,54 @@ if __name__ == "__main__":
     #     links_file="networks/Mandl/mandl_links.csv",
     #     demand_file="networks/Mandl/mandl_demand.csv",
     #     nodes_file="networks/Mandl/mandl_nodes.csv",
-    #     num_population=100,
-    #     num_of_generations=300,
-    #     num_islands=5,
-    #     migration_every_gen=20,
-    #     num_migrants=3,
+    #     num_population=200,
+    #     num_of_generations=100,
+    #     num_islands=10,
+    #     migration_every_gen=10,
+    #     num_migrants=5,
     #     num_routes=6,
     #     min_route=2,
     #     max_route=8)
     
-    run_sequential(network_name='mumford0', num_nodes=30, 
-        links_file="networks/Mumford0/mumford0_links.csv",
-        demand_file="networks/Mumford0/mumford0_demand.csv",
-        nodes_file="networks/Mumford0/mumford0_nodes.csv",
-        num_of_individuals=100,
-        generations=100,
-        num_routes=12,
-        min_route=2,
-        max_route=15)
+    # for _ in range(5):
+    #     all_hv = []
+    #     run_sequential(network_name='mandl', num_nodes=15, 
+    #         demand_file="networks/Mandl/mandl_demand.csv",
+    #         links_file="networks/Mandl/mandl_links.csv",
+    #         nodes_file="networks/Mandl/mandl_nodes.csv",
+    #         num_of_individuals=100,
+    #         generations=100,
+    #         num_routes=6,
+    #         min_route=2,
+    #         max_route=8,
+    #         all_hv=all_hv)      
+        
+    # sum_hv = []
+    # for i in range(100):
+    #     sum_hv.append(0)   
+    #     for j in range(len(all_hv)):
+    #         sum_hv[i] += all_hv[j][i]
+    #     sum_hv[i] = sum_hv[i] / 5
+    
+    # generations = np.arange(1, 101)
+    # plt.figure(figsize=(10, 6))
+    # plt.plot(generations, sum_hv, label="Hipervolumen", color="blue", marker="o")
+    # plt.title("Grafico de Convergencia: Indicador de Hipervolumen")
+    # plt.xlabel("Generacion")
+    # plt.ylabel("Hipervolumen")
+    # plt.grid(True)
+    # plt.legend()
+    # plt.show()
+
+    # run_sequential(network_name='mumford0', num_nodes=30, 
+    #     links_file="networks/Mumford0/mumford0_links.csv",
+    #     demand_file="networks/Mumford0/mumford0_demand.csv",
+    #     nodes_file="networks/Mumford0/mumford0_nodes.csv",
+    #     num_of_individuals=100,
+    #     generations=100,
+    #     num_routes=12,
+    #     min_route=2,
+    #     max_route=15)
 
 
     # run_parallel(network_name='mumford0', num_nodes=30, 
@@ -207,3 +237,79 @@ if __name__ == "__main__":
     #     num_routes=12,
     #     min_route=2,
     #     max_route=15)
+
+    # run_sequential(network_name='mumford1', num_nodes=70, 
+    #     links_file="networks/Mumford1/mumford1_links.csv",
+    #     demand_file="networks/Mumford1/mumford1_demand.csv",
+    #     nodes_file="networks/Mumford1/mumford1_nodes.csv",
+    #     num_of_individuals=100,
+    #     generations=100,
+    #     num_routes=15,
+    #     min_route=10,
+    #     max_route=30)
+
+
+    # run_parallel(network_name='mumford1', num_nodes=70, 
+    #     links_file="networks/Mumford1/mumford1_links.csv",
+    #     demand_file="networks/Mumford1/mumford1_demand.csv",
+    #     nodes_file="networks/Mumford1/mumford1_nodes.csv",
+    #     num_population=100,
+    #     num_of_generations=100,
+    #     num_islands=4,
+    #     migration_every_gen=8,
+    #     num_migrants=4,
+    #     num_routes=15,
+    #     min_route=10,
+    #     max_route=30)
+
+
+
+
+    # run_sequential(network_name='mumford2', num_nodes=110, 
+    #     links_file="networks/Mumford2/mumford2_links.csv",
+    #     demand_file="networks/Mumford2/mumford2_demand.csv",
+    #     nodes_file="networks/Mumford2/mumford2_nodes.csv",
+    #     num_of_individuals=50,
+    #     generations=50,
+    #     num_routes=56,
+    #     min_route=10,
+    #     max_route=22)
+
+
+    # run_parallel(network_name='mumford2', num_nodes=110, 
+    #     links_file="networks/Mumford2/mumford2_links.csv",
+    #     demand_file="networks/Mumford2/mumford2_demand.csv",
+    #     nodes_file="networks/Mumford2/mumford2_nodes.csv",
+    #     num_population=50,
+    #     num_of_generations=50,
+    #     num_islands=5,
+    #     migration_every_gen=5,
+    #     num_migrants=2,
+    #     num_routes=56,
+    #     min_route=10,
+    #     max_route=22)
+
+
+    run_sequential(network_name='mumford3', num_nodes=127, 
+        links_file="networks/Mumford3/mumford3_links.csv",
+        demand_file="networks/Mumford3/mumford3_demand.csv",
+        nodes_file="networks/Mumford3/mumford3_nodes.csv",
+        num_of_individuals=30,
+        generations=30,
+        num_routes=60,
+        min_route=12,
+        max_route=25)
+
+
+    # run_parallel(network_name='mumford3', num_nodes=127, 
+    #     links_file="networks/Mumford3/mumford3_links.csv",
+    #     demand_file="networks/Mumford3/mumford3_demand.csv",
+    #     nodes_file="networks/Mumford3/mumford3_nodes.csv",
+    #     num_population=30,
+    #     num_of_generations=30,
+    #     num_islands=3,
+    #     migration_every_gen=5,
+    #     num_migrants=2,
+    #     num_routes=60,
+    #     min_route=12,
+    #     max_route=25)
